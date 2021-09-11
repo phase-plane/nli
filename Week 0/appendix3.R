@@ -43,3 +43,30 @@ table(list(numCl=y,gender=sx))
 # interaction operator ':'
 table(list(numCl=y,gender.region=sx:re))
 table(list(numCl=y,gender.region=interaction(sx,re)))
+
+# aggregation
+aggr <- aggregate(list(Expo=mo/12, nCl=y, nPol=1),
+                  list(Jb=jb, Tp=tp, Re=re, Sx=sx), sum)
+
+# sample 10 rows
+aggr[sample(1:54, 10),]
+
+
+a <- object.size(aggr)
+# vs
+b <- object.size(y) + object.size(jb) + object.size(tp) + object.size(re) + 
+  object.size(sx) + object.size(mo)
+
+# memory saved
+b-a
+
+# MLE of lambda(3,3,3,2) (row 54) i.e. for that combination of risk factors
+# nClaims / (total) Exposure i.e using aggr [1] 0.112311
+# NOT nClaims / nPol  0.1
+
+# explicitly (from original)
+sum(y[(jb==3)&(tp==3)&(re==3)&(sx==2)]) / 
+  (sum(mo[(jb==3)&(tp==3)&(re==3)&(sx==2)])/12) ## 0.112
+
+# or using aggregate data
+aggr$nCl[54]/aggr$Expo[54] 
