@@ -13,7 +13,7 @@ jb <- as.factor(sample(1:3, n.obs, replace = TRUE, prob = c(3,2,1)))
 re.tp <- sample(1:9, n.obs, repl=TRUE, 
                 prob=c(.1,.05,.15,.15,.1,.05,.1,.1,.2))
 
-tp <- c(1,2,3,1,2,3,1,2,3)[re.tp]; tp <- as.factor(tp)                # *
+tp <- c(1,2,3,1,2,3,1,2,3)[re.tp]; tp <- as.factor(tp)                
 re <- c(1,1,1,2,2,2,3,3,3)[re.tp]; re <- as.factor(re)
 
 # view our generated content (order matters (x,y))
