@@ -113,7 +113,6 @@ bic.Makeham.G    # [1] 16514.56
 bic.Gompertz.G   # [1] 16511.44 *
 
 # Question 8
-
 S <- function(x, a, b, c) exp(-a*x - b/log(c)*(c^x-1)) ## Makeham survival f’n
 x <- 0:110
 plot(x, 1-S(x, 0, 8e-5, 1.08), type="l", ylab="F(x; a,b,c)", lwd=2)
@@ -131,7 +130,6 @@ plot(x, mu(x, 0, 8e-5, 1.08), type="l", ylab="mu(x; a,b,c)", lwd=2,
      xlim = c(0, 80), ylim = c(0, 0.02))
 lines(x, mu(x, 0, 8e-5, 1.09), col="royalblue", lwd=2)
 lines(x, mu(x, 2e-3, 8e-5, 1.08), col="forestgreen", lwd=2)
-
 
 ## include legends 
 legend("topleft", c("0, 8e-5, 1.08", "0, 8e-5, 1.09", "2e-3, 8e-5, 1.08"), 
@@ -168,7 +166,7 @@ myAIC <- function(l, k) -2*l + 2*k
 
 l <- -o9b$value
 k <- length(o9b$par)
-AIC.Makeham <- myAIC(l, k)
+AIC.Makeham <- myAIC(l, k)      ## [1] 382753
 
 # Question 10
 
@@ -193,5 +191,143 @@ lines(x, mleq.x[1:60], col="red", lwd=2)
 legend("topleft", c("observed","estimated"), 
        lty=c(1), lwd=c(2.5), col=c("black" ,"red"))
 
-# Question 12: Lee-Carter
+# Question 12: Lee-Carter gnm (non-linear)
+path <- "https://www1feb-uva.nl/ke/act/people/kaas/"
+Dxt.vec <- round(scan(paste(path,"deaths.csv",sep=""), sep=";", dec=","))
+Ext.vec <- round(scan(paste(path,"exposures.csv",sep=""), sep=";", dec=","))
+nages <- 101; nyears <- 58
+x <- gl(nages,nyears,nages*nyears); t <- gl(nyears,1,nages*nyears)
+lnExt.vec <- log(Ext.vec)
 
+## SVD: initial parameter estimates (Lee-Carter Algorithm)
+Z <- matrix(Dxt.vec, nrow=nages, ncol=nyears, byrow=TRUE)
+Z <- log((Z+.5)/matrix(Ext.vec, nrow=nages, ncol=nyears, byrow=TRUE))
+alpha.LC <- rowMeans(Z)
+Z <- Z - alpha.LC; s <- svd(Z)
+beta.LC <- s$u[,1]; kappa.LC <- s$v[,1]*s$d[1]
+abk <- alpha.LC + beta.LC %o% kappa.LC             ## fitted values (101 x 58)
+
+alpha.LC <- alpha.LC + mean(kappa.LC)*beta.LC      ## identifying transform
+kappa.LC <- sum(beta.LC)*(kappa.LC-mean(kappa.LC)) ## identifying transform
+beta.LC <- beta.LC/sum(beta.LC)                    ## identifying transform
+all.equal(abk, alpha.LC + beta.LC %o% kappa.LC)    ## same fitted values
+rm(abk)
+
+## solution using gnm
+library(gnm)
+set.seed(1)
+start <- exp(lnExt.vec + alpha.LC[x] + beta.LC[x]*kappa.LC[t])
+gg <- gnm(Dxt.vec~ 0 + x + Mult(x,t) + offset(lnExt.vec), family=poisson,
+          mustart=start, trace=TRUE)
+gg$deviance; gg$iter  ## 23406.25 ; 31
+
+## (a)
+## extract parameters
+coef.gg <- coef(gg)
+alpha.gg <- coef.gg[1:nages]
+beta.gg <- coef.gg[(nages+1):(2*nages)]
+kappa.gg <- coef.gg[(2*nages+1):length(coef.gg)]
+
+## transform parameters
+alpha.gnm <- alpha.gg + mean(kappa.gg)*beta.gg      
+beta.gnm <- beta.gg/sum(beta.gg) 
+kappa.gnm <- sum(beta.gg)*(kappa.gg-mean(kappa.gg))
+
+## check
+sum(beta.gnm)    #  [1] 1
+sum(kappa.gnm)   #  [1] -8.826273e-15 (approx. 0)
+
+## (b)
+plot(alpha.gnm[1:65]+beta.gnm[1:65]*kappa.gnm[1], type="l", 
+     lwd=2, col="gray80", ylim=c(-9.3,-3.6), xlab="Age", ylab="Log-mortality")
+lines(alpha.gnm[1:65]+beta.gnm[1:65]*kappa.gnm[25], lwd=2, col="gray60") 
+lines(alpha.gnm[1:65]+beta.gnm[1:65]*kappa.gnm[40], lwd=2, col="gray40") 
+lines(alpha.gnm[1:65]+beta.gnm[1:65]*kappa.gnm[55], lwd=2, col="gray20") 
+
+# Question 13:
+## Bailey-Simon (successive substitution)
+kappa.glm <- kappa.LC; kappas <- kappa.glm[t]
+g1 <- glm(Dxt.vec ~ 0 + x + x:kappas + offset(lnExt.vec), poisson)
+g1$deviance; g1$iter  ## 27605.14  4
+c1 <- coef(g1)
+
+## 
+alpha.glm <- c1[1:nages]
+beta.glm <- c1[(nages+1):(2*nages)]
+
+# Question 14
+betas <- beta.glm[x]
+g2 <- glm(Dxt.vec ~ 0 + x + t:betas + offset(lnExt.vec), poisson,
+          mustart=fitted(g1))
+g2$deviance; g2$iter           ## 23594.36 ;  4
+c2 <- coef(g2)
+round(tail(c2),2)
+## t53:betas t54:betas t55:betas t56:betas t57:betas t58:betas 
+## 24.96     21.34     18.48     15.25      5.62        NA 
+
+alpha.glm <- c2[1:nages]
+kappa.glm <- c2[(nages+1):length(c2)]
+kappa.glm["t58:betas"] <- 0
+
+# Question 15
+
+## reconstruct 
+fitted(g2)[532]   ## 57.28315
+
+myfitg2 <- exp(alpha.glm[x[532]] +
+                 beta.glm[x[532]]*kappa.glm[t[532]] + log(Ext.vec[532]))
+## 57.28315
+
+## Iteration method
+kappa.glm <- kappa.LC
+oldDeviance <- 0; TotnIter <- 0; start <- NULL
+repeat {
+    kappas <- kappa.glm[t]
+    g1 <- glm(Dxt.vec~ 0 + x + x:kappas + offset(lnExt.vec), poisson,
+              mustart=start)
+    c1 <- coef(g1)
+    alpha.glm <- c1[1:nages]
+    beta.glm <- c1[(nages+1):(2*nages)]
+    
+    betas <- beta.glm[x]
+    g2 <- glm(Dxt.vec ~ 0 + x + t:betas + offset(lnExt.vec), poisson, 
+              mustart=fitted(g1))
+    c2 <- coef(g2)
+    alpha.glm <- c2[1:nages]
+    kappa.glm <- c2[(nages+1):length(c2)]
+    kappa.glm["t58:betas"] <- 0                            ## sneaky
+    
+    alpha.glm <- alpha.glm + mean(kappa.glm)*beta.glm      ## identification
+    kappa.glm <- sum(beta.glm)*(kappa.glm-mean(kappa.glm)) ## identification
+    beta.glm <- beta.glm/sum(beta.glm)                     ## identification
+    
+    TotnIter <- TotnIter + g1$iter + g2$iter
+    newDeviance <- g2$deviance;
+    done <- isTRUE(all.equal(oldDeviance, newDeviance, tol=1e-6))
+    cat(g1$deviance, "\t", g2$deviance, "\n")
+    oldDeviance <- newDeviance; start <- fitted(g2)
+    if (done) break
+}
+
+## 27605.14 	 23594.36 
+## 23416.02 	 23406.77 
+## 23406.28 	 23406.25 
+## 23406.25 	 23406.25 
+
+# > TotnIter
+# [1] 20
+
+## Question 16
+range(abs(alpha.glm - alpha.gnm))
+range(abs(beta.glm - beta.gnm))
+range(abs(kappa.glm - kappa.gnm))
+# > round(range(abs(alpha.glm - alpha.gnm)), 4)
+# [1] 0 0
+# > round(range(abs(beta.glm - beta.gnm)), 4)
+# [1] 0 0
+# > round(range(kappa.glm - kappa.gnm), 4)
+# [1] -1e-04  2e-04
+
+# Question 17
+AIC(gg)          ## [1] 67209.76 *
+AIC.Makeham      ## [1] 382753
