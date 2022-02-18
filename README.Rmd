@@ -1,0 +1,16 @@
+---
+title: "README"
+output: md_document
+---
+## Overview
+
+R code and .pdf submissions for the course `Non-Life Insurance: Statistical Techniques and Data Analytics` offered at the University of Amsterdam in Autumn 2021.
+
+Week | Topic (Linked to folder)
+--- | ---
+0 | [R Crash Course](https://github.com/phase-plane/nli/tree/master/Week%200)
+1 | [Generating multivariate normal and Student random vectors](https://github.com/phase-plane/nli/tree/master/Week%201)
+2 | [GLM analysis of automobile insurance portfolios](https://github.com/phase-plane/nli/tree/master/Week%202)
+3 | [Life Insurance](https://github.com/phase-plane/nli/tree/master/Week%203)
+4 | [IBNR Problems](https://github.com/phase-plane/nli/tree/master/Week%204)
+5 | [Variability of IBNR predictions](https://github.com/phase-plane/nli/tree/master/Week%205)
