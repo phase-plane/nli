@@ -3,8 +3,11 @@ title: "README"
 output: md_document
 ---
 ## Overview
+`Non-Life Insurance: Statistical Techniques and Data Analytics`  \
 
-R code and .pdf submissions for the course `Non-Life Insurance: Statistical Techniques and Data Analytics` offered at the University of Amsterdam in Autumn 2021.
+Date: Autumn 2021  \
+
+R code and .pdf submissions for the course offered at the University of Amsterdam.
 
 Week | Topic (Linked to folder)
 --- | ---
