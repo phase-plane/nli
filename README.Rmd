@@ -3,11 +3,11 @@ title: "README"
 output: md_document
 ---
 ## Overview
-`Non-Life Insurance: Statistical Techniques and Data Analytics`  \
+Non-Life Insurance: Statistical Techniques and Data Analytics  \
 
-Date: Autumn 2021  \
+Autumn 2021  \
 
-R code and .pdf submissions for the course offered at the University of Amsterdam.
+R code and .pdf submissions
 
 Week | Topic (Linked to folder)
 --- | ---
@@ -17,5 +17,3 @@ Week | Topic (Linked to folder)
 3 | [Life Insurance](https://github.com/phase-plane/nli/tree/master/Week%203)
 4 | [IBNR Problems](https://github.com/phase-plane/nli/tree/master/Week%204)
 5 | [Variability of IBNR predictions](https://github.com/phase-plane/nli/tree/master/Week%205)
-
-test

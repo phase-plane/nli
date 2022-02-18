@@ -1,11 +1,10 @@
 ## Overview
 
-`Non-Life Insurance: Statistical Techniques and Data Analytics`  
+Non-Life Insurance: Statistical Techniques and Data Analytics  
 
-Date: Autumn 2021  
+Autumn 2021  
 
-R code and .pdf submissions for the course offered at the University of
-Amsterdam.
+R code and .pdf submissions
 
 <table>
 <thead>
